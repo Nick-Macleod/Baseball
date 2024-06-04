@@ -1,0 +1,70 @@
+At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BBpc, BA, XBHpc, HRpc, Outs = 0){
+  Outcome <- "Error"
+  # Check for walk
+  walk_no <- runif(1)
+  if (walk_no <= BBpc/100){
+    if (sum(BaseRunners) == 3){
+      Outcome <- "Walk. Run scores."
+      Runs <- 1
+    } else {
+      BaseRunners[which(BaseRunners == 0)[1]] <- 1
+      Outcome <- "Walk"
+      Runs <- 0
+    }
+  } else {
+    # Check at-bat result
+    XBHdecimal <- XBHpc/100
+    HRdecimal <- HRpc/100
+    AB_no <- runif(1)
+    if (AB_no <= BA){
+      Hit_Outcome <- runif(1)
+      if (Hit_Outcome <= HRdecimal){
+        Outcome <- "Home run"
+        Runs <- sum(BaseRunners) + 1
+        BaseRunners <- rep(0,3)
+      } else if (Hit_Outcome > HRdecimal & Hit_Outcome <= XBHdecimal + HRdecimal){
+        # Taking data from:
+        # https://www.beyondtheboxscore.com/2014/4/21/5631146/chicago-white-sox-adam-dunn-score-from-first-on-double
+        # Runner from first scores on a double approx 42% of the time
+        Outcome <- "Double"
+        Runner_on_1st <- runif(1)
+        if (Runner_on_1st <= .42){
+          Runs <- sum(BaseRunners)
+          BaseRunners <- c(0,1,0)
+        } else {
+          Runs <- BaseRunners[2] + BaseRunners[3]
+          if (BaseRunners[1] == 1){
+            BaseRunners <- c(0,1,1)
+          } else {
+            BaseRunners <- c(0,1,0)
+          }
+        }
+      } else {
+        Outcome <- "Single"
+        Score_from_Second <- runif(1)
+        # Runner scores 58% of time from second on single (to be checked in more detail)
+        # At the moment, we've taken first to third to be same as scoring from second
+        # This has to be changed later
+        if (Score_from_Second <= .58){
+          Runs <- BaseRunners[3] + BaseRunners[2]
+          BaseRunners[3] <- BaseRunners[1]
+          BaseRunners[2] <- 0
+          BaseRunners[1] <- 1
+        } else {
+          Runs <- BaseRunners[3]
+          BaseRunners[3] <- BaseRunners[2]
+          BaseRunners[2] <- BaseRunners[1]
+          BaseRunners[1] <- 1
+        }
+      }
+    } else {
+      Outcome <- "Out"
+      Outs <- Outs + 1
+      Runs <- 0
+    } 
+    }
+  
+  return(data.frame(First = BaseRunners[1], Second = BaseRunners[2], 
+                    Third = BaseRunners[3], Outs = Outs, Outcome = Outcome,
+                    Runs_Scored = Runs))
+}
