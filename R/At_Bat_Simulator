@@ -4,7 +4,7 @@ At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BBpc, BA, XBHpc, HR
   walk_no <- runif(1)
   if (walk_no <= BBpc/100){
     if (sum(BaseRunners) == 3){
-      Outcome <- "Walk. Run scores."
+      Outcome <- "Walk"
       Runs <- 1
     } else {
       BaseRunners[which(BaseRunners == 0)[1]] <- 1
@@ -41,20 +41,34 @@ At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BBpc, BA, XBHpc, HR
         }
       } else {
         Outcome <- "Single"
-        Score_from_Second <- runif(1)
-        # Runner scores 58% of time from second on single (to be checked in more detail)
-        # At the moment, we've taken first to third to be same as scoring from second
-        # This has to be changed later
-        if (Score_from_Second <= .58){
-          Runs <- BaseRunners[3] + BaseRunners[2]
-          BaseRunners[3] <- BaseRunners[1]
-          BaseRunners[2] <- 0
-          BaseRunners[1] <- 1
+        if (BaseRunners[2] <- 1){
+          Score_from_Second <- runif(1)
+          # Runner scores 58% of time from second on single (to be checked in more detail)
+          # At the moment, we've taken first to third to be same as scoring from second
+          # This has to be changed later
+          if (Score_from_Second <= .58){
+            Runs <- BaseRunners[3] + BaseRunners[2]
+            BaseRunners[3] <- BaseRunners[1]
+            BaseRunners[2] <- 0
+            BaseRunners[1] <- 1
+          } else {
+            Runs <- BaseRunners[3]
+            BaseRunners[3] <- BaseRunners[2]
+            BaseRunners[2] <- BaseRunners[1]
+            BaseRunners[1] <- 1
+          } 
         } else {
           Runs <- BaseRunners[3]
-          BaseRunners[3] <- BaseRunners[2]
-          BaseRunners[2] <- BaseRunners[1]
-          BaseRunners[1] <- 1
+          # Runner goes first to third on a single 28% of the time according to:
+          # https://tht.fangraphs.com/a-brief-history-of-running-first-to-third/
+          First_to_Third <- runif(1)
+          if (First_to_Third <= .28){
+            BaseRunners[3] <- BaseRunners[1]
+            BaseRunners[1] <- 1
+          } else {
+            BaseRunners[2] <- BaseRunners[1]
+            BaseRunners[1] <- 1
+          }
         }
       }
     } else {
