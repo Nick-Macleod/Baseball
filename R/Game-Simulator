@@ -1,0 +1,16 @@
+Game_Simulator <- function(Lineup){
+  Game_Result <- data.frame(First = integer(), Second = integer(),
+                            Third = integer(), Outs = integer(),
+                            Outcome = character(), Runs_Scored = integer(),
+                            Innings = integer())
+  Last_Hitter <- 0
+  Innings <- 1
+  for (Innings_No in seq(1,9)){
+    Innings_Result <- Innings_Simulator(Lineup, Last_Hitter)
+    Innings_Result$Innings <- Innings
+    Game_Result <- rbind(Game_Result, Innings_Result)
+    Last_Hitter <- tail(Game_Result,1)$Hitter
+    Innings <- Innings + 1
+  }
+  return(Game_Result)
+}
