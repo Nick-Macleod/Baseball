@@ -1,0 +1,21 @@
+Innings_Simulator <- function(Lineup, Last_Hitter){
+  Innings_Result <- data.frame(First = 0, Second = 0,Third = 0, Outs = 0,
+                               Outcome = "", Runs_Scored = 0, Hitter = Last_Hitter)
+  Outs <- 0
+  Hitter_Due_Up <- Last_Hitter %% 9 + 1
+  while (Outs<3){
+    Current_Situation <- tail(Innings_Result,1)
+    AB_Result <- At_Bat_Outcome_Simulator(BaseRunners = c(Current_Situation$First,
+                                                          Current_Situation$Second,
+                                                          Current_Situation$Third),
+      BBpc = Lineup[Hitter_Due_Up,]$BBpc, BA = Lineup[Hitter_Due_Up,]$BA,
+      XBHpc = Lineup[Hitter_Due_Up,]$XBHpc, HRpc = Lineup[Hitter_Due_Up,]$HRpc,
+      Outs
+    )
+    AB_Result$Hitter <- Hitter_Due_Up
+    Hitter_Due_Up <- (Hitter_Due_Up %% 9) + 1
+    Innings_Result <- rbind(Innings_Result,AB_Result)
+    Outs <- AB_Result$Outs
+  }
+  return(Innings_Result)
+}
