@@ -1,0 +1,25 @@
+# See comments for Innings-Simulator. This one does not keep a track of each AB, it only tracks the runs.
+# We use this one when we are running man simulations to save on computing time.
+
+Innings_Runs_Simulator <- function(Lineup, Last_Hitter){
+  Innings_Result <- data.frame(First = 0, Second = 0,Third = 0, Outs = 0,
+                               Outcome = "", Runs_Scored = 0, Hitter = Last_Hitter)
+  Outs <- 0
+  Hitter_Due_Up <- Last_Hitter %% 9 + 1
+  Total_Runs_Scored <- 0
+  while (Outs < 3){
+    Current_Situation <- tail(Innings_Result,1)
+    AB_Result <- At_Bat_Outcome_Simulator(BaseRunners = c(Current_Situation$First,
+                                                          Current_Situation$Second,
+                                                          Current_Situation$Third),
+                                          BB_avg = Lineup[Hitter_Due_Up,]$BB_avg, SNGL_avg = Lineup[Hitter_Due_Up,]$SNGL_avg,
+                                          DBL_avg = Lineup[Hitter_Due_Up,]$DBL_avg, HR_avg = Lineup[Hitter_Due_Up,]$HR_avg,
+                                          Outs
+    )
+    AB_Result$Hitter <- Hitter_Due_Up
+    Hitter_Due_Up <- (Hitter_Due_Up %% 9) + 1
+    Outs <- AB_Result$Outs
+    Total_Runs_Scored <- Total_Runs_Scored + AB_Result$Runs_Scored
+  }
+  return(c(Total_Runs_Scored, Hitter_Due_Up))
+}
