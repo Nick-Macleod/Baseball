@@ -1,51 +1,40 @@
-At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BBpc, BA, XBHpc, HRpc, Outs = 0){
-  Outcome <- "Error"
-  # Check for walk
-  walk_no <- runif(1)
-  if (walk_no <= BBpc/100){
-    if (sum(BaseRunners) == 3){
-      Outcome <- "Walk"
-      Runs <- 1
-    } else {
-      BaseRunners[which(BaseRunners == 0)[1]] <- 1
-      Outcome <- "Walk"
-      Runs <- 0
-    }
+# Technically this is a plate appearance simulator now that I've changed it to use different stats.
+# Since it is simulating on a plate appearance basis, the inputs have to be rates of outcomes per PA.
+# The notation "_avg" means to give inputs as a decimal (IE: if a player has a 10% walk rate, input BB_avg=.100).
+# For simpilicity and faster computation we ignore MANY factors, eg no triples, stolen bases, advancing on outs, HBP, etc.
+# We indicate the base runner situation by a vector of 3 binary numbers. A 1 represents a runner on that base and 0 no one.
+# EG: (1,0,1) is a runner on 1st and 3rd.
+
+At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BB_avg, SNGL_avg, DBL_avg, HR_avg, Outs = 0){
+  # This line is for debugging purposes, it will return Error if you did not assign
+  # an outcome to the at-bat.
+  # Outcome <- "Error"
+
+  # This first line generates the probability used for the PA.
+  Plate_Appearance <- runif(1)
+  # We check if the player registers an out first (as it is expected to be the most common outcome).
+  if (Plate_Appearance > BB_avg + SNGL_avg + DBL_avg + HR_avg){
+    Outcome <- "Out"
+    Outs <- Outs + 1
+    Runs <- 0
   } else {
-    # Check at-bat result
-    XBHdecimal <- XBHpc/100
-    HRdecimal <- HRpc/100
-    AB_no <- runif(1)
-    if (AB_no <= BA){
-      Hit_Outcome <- runif(1)
-      if (Hit_Outcome <= HRdecimal){
-        Outcome <- "Home run"
-        Runs <- sum(BaseRunners) + 1
-        BaseRunners <- rep(0,3)
-      } else if (Hit_Outcome > HRdecimal & Hit_Outcome <= XBHdecimal + HRdecimal){
-        # Taking data from:
-        # https://www.beyondtheboxscore.com/2014/4/21/5631146/chicago-white-sox-adam-dunn-score-from-first-on-double
-        # Runner from first scores on a double approx 42% of the time
-        Outcome <- "Double"
-        Runner_on_1st <- runif(1)
-        if (Runner_on_1st <= .42){
-          Runs <- sum(BaseRunners)
-          BaseRunners <- c(0,1,0)
-        } else {
-          Runs <- BaseRunners[2] + BaseRunners[3]
-          if (BaseRunners[1] == 1){
-            BaseRunners <- c(0,1,1)
-          } else {
-            BaseRunners <- c(0,1,0)
-          }
-        }
+    # Next check for a walk, if bases are loaded a run scores, if not the first empty base is filled.
+    if (Plate_Appearance <= BB_avg){
+      if (sum(BaseRunners) == 3){
+        Outcome <- "Walk"
+        Runs <- 1
       } else {
+        BaseRunners[which(BaseRunners == 0)[1]] <- 1
+        Outcome <- "Walk"
+        Runs <- 0
+      } 
+    } else {
+      BB_SNGL <- BB_avg + SNGL_avg
+      if (Plate_Appearance > BB_avg & Plate_Appearance <= BB_SNGL){
         Outcome <- "Single"
-        if (BaseRunners[2] <- 1){
+        if (BaseRunners[2] == 1){
           Score_from_Second <- runif(1)
           # Runner scores 58% of time from second on single (to be checked in more detail)
-          # At the moment, we've taken first to third to be same as scoring from second
-          # This has to be changed later
           if (Score_from_Second <= .58){
             Runs <- BaseRunners[3] + BaseRunners[2]
             BaseRunners[3] <- BaseRunners[1]
@@ -56,7 +45,7 @@ At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BBpc, BA, XBHpc, HR
             BaseRunners[3] <- BaseRunners[2]
             BaseRunners[2] <- BaseRunners[1]
             BaseRunners[1] <- 1
-          } 
+          }
         } else {
           Runs <- BaseRunners[3]
           # Runner goes first to third on a single 28% of the time according to:
@@ -70,14 +59,43 @@ At_Bat_Outcome_Simulator <- function(BaseRunners = rep(0,3), BBpc, BA, XBHpc, HR
             BaseRunners[1] <- 1
           }
         }
+      } else {
+        Upto_DBL <- BB_SNGL + DBL_avg
+        if (Plate_Appearance > BB_SNGL & Plate_Appearance <= Upto_DBL){
+          # Taking data from:
+          # https://www.beyondtheboxscore.com/2014/4/21/5631146/chicago-white-sox-adam-dunn-score-from-first-on-double
+          # Runner from first scores on a double approx 42% of the time.
+          Outcome <- "Double"
+          Runner_on_1st <- runif(1)
+          if (Runner_on_1st <= .42){
+            Runs <- sum(BaseRunners)
+            BaseRunners <- c(0,1,0)
+          } else {
+          # We assume that the runner doesn't get in an awkward hold up from 2nd and always scores on a double.
+            Runs <- BaseRunners[2] + BaseRunners[3]
+            if (BaseRunners[1] == 1){
+              BaseRunners <- c(0,1,1)
+            } else {
+              BaseRunners <- c(0,1,0)
+            }
+          }
+          
+        } else {
+          # Home runs are expected to be rarest so are checked last.
+          Upto_HR <- Upto_DBL + HR_avg
+          if (Plate_Appearance > Upto_DBL & Plate_Appearance <= Upto_HR){
+            Outcome <- "Home run"
+            Runs <- sum(BaseRunners) + 1
+            BaseRunners <- rep(0,3)
+          }
+          
+        }
       }
-    } else {
-      Outcome <- "Out"
-      Outs <- Outs + 1
-      Runs <- 0
-    } 
     }
-  
+  }
+  # The PA results is returned by a data frame with binary digits for runners,
+  # a number between 0 and 3 for outs and 0-4 for the total runs scored on the play.
+  # It also remember the outcome as a string.
   return(data.frame(First = BaseRunners[1], Second = BaseRunners[2], 
                     Third = BaseRunners[3], Outs = Outs, Outcome = Outcome,
                     Runs_Scored = Runs))
