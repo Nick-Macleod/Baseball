@@ -1,0 +1,19 @@
+# This function is similar to the Game-Simulator except it is for simulating lots of games
+# and uses the Innings-Runs-Simulator instead.
+
+Game_Runs_Simulator <- function(Lineup){
+  Game_Result <- data.frame(First = integer(), Second = integer(),
+                            Third = integer(), Outs = integer(),
+                            Outcome = character(), Runs_Scored = integer(),
+                            Innings = integer())
+  Last_Hitter <- 0
+  Total_Runs <- 0
+  # Innings <- 1
+  for (Innings_No in seq(1,9)){
+    Innings_Result <- Innings_Runs_Simulator(Lineup, Last_Hitter)
+    # Innings_Result$Innings <- Innings
+    Last_Hitter <- Innings_Result[2]
+    Total_Runs <- Total_Runs + Innings_Result[1]
+  }
+  return(Total_Runs)
+}
