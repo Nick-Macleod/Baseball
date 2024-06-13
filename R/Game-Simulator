@@ -1,4 +1,22 @@
+# This function takes in a lineup and then runs the innings simulator 9 times to simulate a complete game.
+# It returns a dataframe that contains each outcome in each innings and keeps track of which hitter
+# had each outcome.
+
 Game_Simulator <- function(Lineup){
+  # This first chunk of code allows people to import standard and ratio batting off baseball reference
+  # and then the function uses the relevant stats to get avgs per plate-appearance as needed for the
+  # at-bat simulator.
+  Lineup_Stats_per_PA <- data.frame()
+  for (Player in 1:9){
+    BB <- as.numeric(sub("%", "",Lineup$BB.[Player]))/100
+    HR <- as.numeric(sub("%", "",Lineup$HR.[Player]))/100
+    DBL <- as.numeric(sub("%", "",Lineup$XBH.[Player]))/100 - HR
+    HpPA <- Lineup$OBP[Player] - BB
+    SNGL <- HpPA - HR - DBL
+    Updated_Player_Stats <- data.frame(BB_avg = BB, SNGL_avg = SNGL, 
+                                       DBL_avg = DBL, HR_avg = HR)
+    Lineup_Stats_per_PA <- rbind(Lineup_Stats_per_PA, Updated_Player_Stats)
+  }
   Game_Result <- data.frame(First = integer(), Second = integer(),
                             Third = integer(), Outs = integer(),
                             Outcome = character(), Runs_Scored = integer(),
@@ -6,7 +24,7 @@ Game_Simulator <- function(Lineup){
   Last_Hitter <- 0
   Innings <- 1
   for (Innings_No in seq(1,9)){
-    Innings_Result <- Innings_Simulator(Lineup, Last_Hitter)
+    Innings_Result <- Innings_Simulator(Lineup_Stats_per_PA, Last_Hitter)
     Innings_Result$Innings <- Innings
     Game_Result <- rbind(Game_Result, Innings_Result)
     Last_Hitter <- tail(Game_Result,1)$Hitter
