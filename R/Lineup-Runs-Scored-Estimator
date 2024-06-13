@@ -1,0 +1,34 @@
+# This function takes in an ordered hitting lineup of stats and a number of games to simulate.
+# It then uses the Game-Runs-Simulator to simulate those games and computes the runs scored.
+# Once it has done this, it takes an average of the runs scored per game and returns that. 
+# It also creates a progress bar so you can see how far through the simulation you are.
+
+Lineup_Runs_Scored_Estimator <- function(Lineup, No_Games){
+  # This first chunk of code allows people to import standard and ratio batting off baseball reference
+  # and then the function uses the relevant stats to get avgs per plate-appearance as needed for the
+  # at-bat simulator.
+  Lineup_Stats_per_PA <- data.frame()
+  for (Player in 1:9){
+    BB <- as.numeric(sub("%", "",Lineup$BB.[Player]))/100
+    HR <- as.numeric(sub("%", "",Lineup$HR.[Player]))/100
+    DBL <- as.numeric(sub("%", "",Lineup$XBH.[Player]))/100 - HR
+    HpPA <- Lineup$OBP[Player] - BB
+    SNGL <- HpPA - HR - DBL
+   Updated_Player_Stats <- data.frame(BB_avg = BB, SNGL_avg = SNGL, 
+                                      DBL_avg = DBL, HR_avg = HR)
+   Lineup_Stats_per_PA <- rbind(Lineup_Stats_per_PA, Updated_Player_Stats)
+  }
+  Total_Runs <- 0
+  pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
+                       max = No_Games, # Maximum value of the progress bar
+                       style = 3,    # Progress bar style (also available style = 1 and style = 2)
+                       # width = 50,   # Progress bar width. Defaults to getOption("width")
+                       char = "=")   # Character used to create the bar
+  
+  for (game_no in 1:No_Games){
+    Total_Runs <- Total_Runs + Game_Runs_Simulator(Lineup_Stats_per_PA)
+    setTxtProgressBar(pb, game_no)
+  }
+  close(pb)
+  return(Total_Runs/No_Games)
+}
