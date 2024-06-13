@@ -5,6 +5,20 @@
 # of each plate appearance to each other in an dataframe. Each row is one PA.
 
 Innings_Simulator <- function(Lineup, Last_Hitter){
+  # This first chunk of code allows people to import standard and ratio batting off baseball reference
+  # and then the function uses the relevant stats to get avgs per plate-appearance as needed for the
+  # at-bat simulator.
+  Lineup_Stats_per_PA <- data.frame()
+  for (Player in 1:9){
+    BB <- as.numeric(sub("%", "",Lineup$BB.[Player]))/100
+    HR <- as.numeric(sub("%", "",Lineup$HR.[Player]))/100
+    DBL <- as.numeric(sub("%", "",Lineup$XBH.[Player]))/100 - HR
+    HpPA <- Lineup$OBP[Player] - BB
+    SNGL <- HpPA - HR - DBL
+   Updated_Player_Stats <- data.frame(BB_avg = BB, SNGL_avg = SNGL, 
+                                      DBL_avg = DBL, HR_avg = HR)
+   Lineup_Stats_per_PA <- rbind(Lineup_Stats_per_PA, Updated_Player_Stats)
+  }
   # Initialize with bases empty (ie the vector (0,0,0), outs at 0 and no runs). Start with next hitter.
   Innings_Result <- data.frame(First = 0, Second = 0,Third = 0, Outs = 0,
                                Outcome = "", Runs_Scored = 0, Hitter = Last_Hitter)
@@ -15,8 +29,10 @@ Innings_Simulator <- function(Lineup, Last_Hitter){
     AB_Result <- At_Bat_Outcome_Simulator(BaseRunners = c(Current_Situation$First,
                                                           Current_Situation$Second,
                                                           Current_Situation$Third),
-      BB_avg = Lineup[Hitter_Due_Up,]$BB_avg, SNGL_avg = Lineup[Hitter_Due_Up,]$SNGL_avg,
-      DBL_avg = Lineup[Hitter_Due_Up,]$DBL_avg, HR_avg = Lineup[Hitter_Due_Up,]$HR_avg,
+      BB_avg = Lineup_Stats_per_PA[Hitter_Due_Up,]$BB_avg, 
+      SNGL_avg = Lineup_Stats_per_PA[Hitter_Due_Up,]$SNGL_avg,
+      DBL_avg = Lineup_Stats_per_PA[Hitter_Due_Up,]$DBL_avg, 
+      HR_avg = Lineup_Stats_per_PA[Hitter_Due_Up,]$HR_avg,
       Outs
     )
     AB_Result$Hitter <- Hitter_Due_Up
