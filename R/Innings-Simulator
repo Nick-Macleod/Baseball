@@ -1,3 +1,9 @@
+# This code is simple, it takes in a data frame which has the stats of the hitting lineup in order
+# and the number of the last hitter. It then runs the at-bat simulator in order through the hitting lineup
+# until 3 outs are registered. Since we are modelling a game as a Markov chain it only needs to know
+# the last situation to work out what happens. This keeps an innings log by binding the results
+# of each plate appearance to each other in an dataframe. Each row is one PA.
+
 Innings_Simulator <- function(Lineup, Last_Hitter){
   Innings_Result <- data.frame(First = 0, Second = 0,Third = 0, Outs = 0,
                                Outcome = "", Runs_Scored = 0, Hitter = Last_Hitter)
@@ -8,8 +14,8 @@ Innings_Simulator <- function(Lineup, Last_Hitter){
     AB_Result <- At_Bat_Outcome_Simulator(BaseRunners = c(Current_Situation$First,
                                                           Current_Situation$Second,
                                                           Current_Situation$Third),
-      BBpc = Lineup[Hitter_Due_Up,]$BBpc, BA = Lineup[Hitter_Due_Up,]$BA,
-      XBHpc = Lineup[Hitter_Due_Up,]$XBHpc, HRpc = Lineup[Hitter_Due_Up,]$HRpc,
+      BB_avg = Lineup[Hitter_Due_Up,]$BB_avg, SNGL_avg = Lineup[Hitter_Due_Up,]$SNGL_avg,
+      DBL_avg = Lineup[Hitter_Due_Up,]$DBL_avg, HR_avg = Lineup[Hitter_Due_Up,]$HR_avg,
       Outs
     )
     AB_Result$Hitter <- Hitter_Due_Up
