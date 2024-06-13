@@ -5,6 +5,7 @@
 # of each plate appearance to each other in an dataframe. Each row is one PA.
 
 Innings_Simulator <- function(Lineup, Last_Hitter){
+  # Initialize with bases empty (ie the vector (0,0,0), outs at 0 and no runs). Start with next hitter.
   Innings_Result <- data.frame(First = 0, Second = 0,Third = 0, Outs = 0,
                                Outcome = "", Runs_Scored = 0, Hitter = Last_Hitter)
   Outs <- 0
