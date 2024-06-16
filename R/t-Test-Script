@@ -1,0 +1,14 @@
+n1 <- length(Turner_Leadoff_Runs)
+n2 <- length(Schwarber_Leadoff_Runs)
+alpha <- 0.999
+df <- n1 + n2 - 2
+Turner_var <- var(Turner_Leadoff_Runs)
+Schwarber_var <- var(Schwarber_Leadoff_Runs)
+mu1 <- mean(Turner_Leadoff_Runs)
+mu2 <- mean(Schwarber_Leadoff_Runs)
+# Since number of samples the same, pooled variance is average of both
+t_stat <- (mu2 - mu1)/(sqrt((1/n1 + 1/n2)*
+                              (Turner_var + Schwarber_var)/2))
+# Calculate the t-value for specified alpha and degrees of freedom to compare
+t_stat
+qt(p = alpha,df)
